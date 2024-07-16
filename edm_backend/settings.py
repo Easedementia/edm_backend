@@ -15,6 +15,9 @@ import os
 import environ
 from datetime import timedelta
 from decouple import config
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Initialize environment variables
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -82,8 +85,15 @@ CORS_ALLOWED_ORIGINS = [
 
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ORIGIN_WHITELIST = (
+    'http://localhost:3000',  
+)
+
 
 CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+CSRF_COOKIE_HTTPONLY = True
+CSRF_COOKIE_SECURE = False  # Change to True in production
+SESSION_COOKIE_SECURE = False  # Change to True in production
 
 ROOT_URLCONF = 'edm_backend.urls'
 
@@ -144,6 +154,10 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+# AUTHENTICATION_BACKENDS = [
+#     'django.contrib.auth.backends.ModelBackend',  # default
+#     'user_side.backends.EmailBackend',            # custom
+# ]
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
@@ -171,15 +185,15 @@ MEDIA_URL = '/media/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-# AUTH_USER_MODEL = 'user_side.CustomUser'
+AUTH_USER_MODEL = 'user_side.CustomUser'
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-EMAIL_HOST_USER = config('EMAIL_HOST_USER')  
-EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD')
+EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
 
 
 

@@ -27,8 +27,34 @@ class CustomUserSerializer(serializers.ModelSerializer):
             is_active=validated_data.get('is_active', True),
             is_verified=validated_data.get('is_verified', False)
         )
+        user.is_active = True
+        user.save()
         return user
     
     # def create(self, validated_data):
     #     user = CustomUser.objects.create_user(**validated_data)
     #     return user 
+
+
+
+class verifyAccountSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField()
+
+
+
+
+class GoogleUserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ['id', 'fullname', 'email']
+
+    
+    
+    def create(self, validated_data):
+        email = validated_data.pop('email')
+        user = CustomUser.objects.create(**validated_data)
+        user.email = email
+        user.username = email
+        user.save()
+        return user
