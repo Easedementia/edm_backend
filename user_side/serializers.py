@@ -47,7 +47,7 @@ class verifyAccountSerializer(serializers.Serializer):
 class GoogleUserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['id', 'fullname', 'email']
+        fields = ['id', 'email']
 
     
     
@@ -55,6 +55,5 @@ class GoogleUserSerializer(serializers.ModelSerializer):
         email = validated_data.pop('email')
         user = CustomUser.objects.create(**validated_data)
         user.email = email
-        user.username = email
         user.save()
         return user
