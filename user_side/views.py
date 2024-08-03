@@ -1,7 +1,7 @@
 import logging
 from django.shortcuts import render
 from .models import CustomUser
-from .serializers import CustomUserSerializer, verifyAccountSerializer, GoogleUserSerializer
+from .serializers import CustomUserSerializer, verifyAccountSerializer, GoogleUserSerializer, EnquirySerializer
 from rest_framework.views import APIView,Response
 from django.contrib.auth import get_user_model, authenticate
 from django.conf import settings
@@ -15,6 +15,9 @@ from rest_framework.permissions import AllowAny
 from rest_framework_simplejwt.views import TokenObtainPairView
 import os
 from dotenv import load_dotenv
+from admin_side.models import *
+from admin_side.views import *
+from admin_side.serializers import *
 
 load_dotenv()
 
@@ -243,3 +246,41 @@ class GoogleAuthLogin(APIView):
                 return JsonResponse({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
         
         return JsonResponse({"error": "User not found or inactive"}, status=status.HTTP_404_NOT_FOUND)
+    
+
+
+
+class EnquiryView(APIView):
+    def post(self, request):
+        serializer = EnquirySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    
+
+
+class ListServicesView(APIView):
+    def get(self, request):
+        services = Service.objects.all()
+        serializer = ServiceSerializer(services, many=True)
+        return Response(serializer.data)
+    
+
+
+
+class DoctorProfileListView(APIView):
+    def get(self, request):
+        doctors = DoctorProfile.objects.all()
+        serializer = DoctorProfileSerializer(doctors, many=True)
+        return Response(serializer.data)
+    
+
+
+class DoctorTimeSlotsView(APIView):
+    def get(self, request, doctor_id):
+        timeslots = TimeSlot.objects.filter(doctor_id=doctor_id)
+        serializer = TimeSlotSerializer(timeslots, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    

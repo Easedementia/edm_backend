@@ -57,3 +57,12 @@ class GoogleUserSerializer(serializers.ModelSerializer):
         user.email = email
         user.save()
         return user
+    
+
+
+class EnquirySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Enquiries
+        fields = '__all__'
+
+    
