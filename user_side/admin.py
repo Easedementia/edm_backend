@@ -6,3 +6,5 @@ from .models import *
 
 admin.site.register(CustomUser)
 admin.site.register(Enquiries)
+admin.site.register(Appointment)
+admin.site.register(Order)

@@ -66,3 +66,15 @@ class EnquirySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     
+
+
+class AppointmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Appointment
+        fields = '__all__'
+
+
+class OrderSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Order
+        fields = '__all__'

@@ -1,7 +1,7 @@
 import logging
 from django.shortcuts import render
 from .models import CustomUser
-from .serializers import CustomUserSerializer, verifyAccountSerializer, GoogleUserSerializer, EnquirySerializer
+from .serializers import CustomUserSerializer, verifyAccountSerializer, GoogleUserSerializer, EnquirySerializer, AppointmentSerializer, OrderSerializer
 from rest_framework.views import APIView,Response
 from django.contrib.auth import get_user_model, authenticate
 from django.conf import settings
@@ -18,6 +18,9 @@ from dotenv import load_dotenv
 from admin_side.models import *
 from admin_side.views import *
 from admin_side.serializers import *
+from rest_framework.exceptions import NotFound
+import razorpay
+import json
 
 load_dotenv()
 
@@ -283,4 +286,142 @@ class DoctorTimeSlotsView(APIView):
         timeslots = TimeSlot.objects.filter(doctor_id=doctor_id)
         serializer = TimeSlotSerializer(timeslots, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
-    
+
+
+
+class CreateAppointmentView(APIView):
+    def post(self, request, *args, **kwargs):
+        serializer = AppointmentSerializer(data=request.data)
+        if serializer.is_valid():
+            appointment = serializer.save()
+            return Response({'appointment_id': appointment.id, 'details': serializer.data}, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+
+
+class StartPayment(APIView):
+    def post(self, request, id):
+        print("*****************************")
+        print("REQUEST DATA:", request.data)
+        print("*****************************")
+        user_id = request.data['user_id']
+        user_name = request.data['user_name']
+        user_email = request.data['user_email']
+        user_mobile = request.data['user_mobile']
+        doctor_id = request.data['doctor_id']
+        doctor_name = request.data['doctor_name']
+        consulting_fee = request.data['consulting_fee']
+        selected_date = request.data['selected_date']
+        selected_day = request.data['selected_day']
+        selected_start_time = request.data['selected_start_time']
+        selected_end_time = request.data['selected_end_time']
+
+        try:
+            print("***USER DETAILS***")
+            user = CustomUser.objects.get(id=user_id)
+            print("***USER***", user)
+        except CustomUser.DoesNotExist:
+            raise NotFound("User not found")
+
+
+        try:
+            doctor = DoctorProfile.objects.get(id=doctor_id)
+            print("Doctor:", doctor)
+        except DoctorProfile.DoesNotExist:
+            raise NotFound('Doctor not found')
+        
+        client = razorpay.Client(auth=(settings.RAZORPAY_PUBLIC_KEY, settings.RAZORPAY_SECRET_KEY))
+
+
+        amount = int(float(consulting_fee) * 100)  # Convert amount to paise
+        payment = client.order.create({
+            "amount": amount,
+            "currency": "INR",
+            "payment_capture": "1"
+        })
+        try:
+            order = Order.objects.create(
+                user = user,
+                user_name = user_name,
+                user_email = user_email,
+                doctor = doctor,
+                doctor_name = doctor_name,
+                order_amount = consulting_fee,
+                order_payment_id = payment['id'],
+                time_slot_date = selected_date,
+                time_slot_day = selected_day,
+                time_slot_start_time = selected_start_time,
+                time_slot_end_time = selected_end_time
+            )
+            
+            print("******************")
+            print('***order***', order)
+            print("******************")
+
+            serializer = OrderSerializer(order)
+            print('***serializer data***', serializer.data)
+
+            data = {
+                "payment": payment,
+                "order": serializer.data
+            }
+            print('***data***', data)
+            
+            return Response(data)
+        
+        except Exception as e:
+            # Log the error for debugging
+            print(f"Error during payment processing: {str(e)}")
+            return JsonResponse({'error': 'Internal Server Error'}, status=500)
+        
+
+
+
+
+class HandlePaymentSuccess(APIView):
+    def post(self, request):
+        print('*********handle_payment_success************')
+        try:
+            # Ensure proper parsing of request body
+            res = json.loads(request.body)
+        except json.JSONDecodeError:
+            return Response({'error': 'Invalid JSON'}, status=400)
+
+        print('***res***', res)
+
+        ord_id = res.get('razorpay_order_id', "")
+        raz_pay_id = res.get('razorpay_payment_id', "")
+        raz_signature = res.get('razorpay_signature', "")
+
+        print('Order Payment ID:', ord_id)
+
+        # Get the order by payment_id
+        try:
+            order = Order.objects.get(order_payment_id=ord_id)
+        except Order.DoesNotExist:
+            return Response({'error': 'Order not found'}, status=404)
+
+        # Verify the payment signature with Razorpay
+        data = {
+            'razorpay_order_id': ord_id,
+            'razorpay_payment_id': raz_pay_id,
+            'razorpay_signature': raz_signature
+        }
+
+        client = razorpay.Client(auth=("rzp_test_ZQL2ChZEK9SL7A", "qiIPMJQP7dND0mDggXkRa3Xr"))
+
+        try:
+            client.utility.verify_payment_signature(data)
+        except razorpay.errors.SignatureVerificationError:
+            return Response({'error': 'Invalid payment signature'}, status=400)
+
+        # Update the order status to paid
+        order.isPaid = True
+        order.save()
+
+        res_data = {
+            'message': 'Payment successfully received!'
+        }
+
+        return Response(res_data)

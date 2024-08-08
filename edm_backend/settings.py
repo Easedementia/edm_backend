@@ -189,6 +189,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'user_side.CustomUser'
 
 
+# Add your Razorpay keys here
+RAZORPAY_PUBLIC_KEY = 'rzp_test_ZQL2ChZEK9SL7A'
+RAZORPAY_SECRET_KEY = 'qiIPMJQP7dND0mDggXkRa3Xr'
+
+
+
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587

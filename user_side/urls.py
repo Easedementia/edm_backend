@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView
+from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess
 
 
 
@@ -12,4 +12,7 @@ urlpatterns = [
     path('services/', ListServicesView.as_view(), name='services'),
     path('doctors-list/', DoctorProfileListView.as_view(), name='doctors-list'),
     path('doctor-time-slots/<int:doctor_id>/', DoctorTimeSlotsView.as_view(), name='doctor-time-slots'),
+    path('create-appointment/', CreateAppointmentView.as_view(), name='create-appointment'),
+    path('pay/<int:id>/', StartPayment.as_view(), name="payment"),
+    path('payment/success/', HandlePaymentSuccess.as_view(), name="payment_success"),
 ]

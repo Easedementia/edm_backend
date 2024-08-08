@@ -1,4 +1,5 @@
 from django.db import models
+from admin_side.models import *
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin, Group, Permission
 
 
@@ -62,4 +63,49 @@ class Enquiries(models.Model):
 
     def __str__(self):
         return self.fullname
+
+
+
+class Appointment(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user_name = models.CharField(max_length=100, null=True)
+    user_email = models.CharField(max_length=100, null=True)
+    doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, null=True)
+    doctor_name = models.CharField(max_length=100, null=True)
+    date = models.DateField()
+    time_slot = models.ForeignKey(TimeSlot, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_booked = models.BooleanField(default=False)
+
+
+    def __str__(self):
+        return f"{self.user} - {self.doctor} - {self.date}"
     
+
+
+
+class Order(models.Model):
+    STATUS_CHOICES = [
+        ('Pending', 'Pending'),
+        ('Completed', 'Completed'),
+        ('Cancelled', 'Cancelled'),
+    ]
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True)
+    user_name = models.CharField(max_length=100, null=True)
+    user_email = models.CharField(max_length=100, null=True)
+    doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, null=True)
+    doctor_name = models.CharField(max_length=100, null=True)
+    order_amount = models.CharField(max_length=25)
+    order_payment_id = models.CharField(max_length=100)
+    isPaid = models.BooleanField(default=False)
+    order_date = models.DateTimeField(auto_now=True)
+    time_slot_date = models.DateField(null=True)
+    time_slot_day = models.CharField(max_length=100, null=True)  
+    time_slot_start_time = models.TimeField(null=True) 
+    time_slot_end_time = models.TimeField(null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
+
+
+    def __str__(self):
+        return f"Order {self.id} by {self.user_name} for {self.doctor_name}"
