@@ -24,6 +24,7 @@ class DoctorProfileSerializer(serializers.ModelSerializer):
 
 
 class TimeSlotSerializer(serializers.ModelSerializer):
+    doctor_name = serializers.CharField(source='doctor.doctor_name', read_only=True)
     class Meta:
         model = TimeSlot
-        fields = ['id', 'day', 'start_time', 'end_time', 'doctor', 'is_booked']
+        fields = ['id', 'day', 'start_time', 'end_time', 'doctor_name', 'is_booked']

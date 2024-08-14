@@ -5,6 +5,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from .serializers import *
+from user_side.serializers import *
 from .models import *
 from user_side.models import CustomUser
 from rest_framework.permissions import IsAuthenticated
@@ -153,3 +154,40 @@ class TimeSlotCreateView(APIView):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
+
+
+
+class TimeSlotListView(APIView):
+    def get(self, request, *args, **kwargs):
+        time_slots = TimeSlot.objects.all()
+        serializer = TimeSlotSerializer(time_slots, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+
+class AppointmentListView(APIView):
+    def get(self, request):
+        try:
+            orders = Order.objects.all()
+            serializer = OrderSerializer(orders, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+
+class UpdateAppointmentStatusView(APIView):
+    def put(self, request, id):
+        try:
+            appointment = Order.objects.get(id=id)
+            new_status = request.data.get('status')
+            if new_status in dict(Order.STATUS_CHOICES).keys():
+                appointment.status = new_status
+                appointment.save()
+                return Response({'message': 'Status updated successfully'}, status=status.HTTP_200_OK)
+            return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
+        except Order.DoesNotExist:
+            return Response({'error': 'Appointment not found'}, status=status.HTTP_404_NOT_FOUND)
+        

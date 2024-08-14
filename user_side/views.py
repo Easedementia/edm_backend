@@ -393,6 +393,11 @@ class HandlePaymentSuccess(APIView):
         ord_id = res.get('razorpay_order_id', "")
         raz_pay_id = res.get('razorpay_payment_id', "")
         raz_signature = res.get('razorpay_signature', "")
+        appointment_id = res.get('appointment_id', None)
+        slot_id = res.get('slot_id', None)
+
+        if not appointment_id:
+            return Response({'error': 'Appointment ID not provided'}, status=400)
 
         print('Order Payment ID:', ord_id)
 
@@ -420,8 +425,23 @@ class HandlePaymentSuccess(APIView):
         order.isPaid = True
         order.save()
 
+        try:
+            appointment = Appointment.objects.get(id=appointment_id)
+            appointment.is_booked = True
+            appointment.save()
+        except Appointment.DoesNotExist:
+            return Response({'error': 'Appointment not found'}, status=404)
+        
+
+        try:
+            timeslot = TimeSlot.objects.get(id=slot_id)
+            timeslot.is_booked = True
+            timeslot.save()
+        except TimeSlot.DoesNotExist:
+            return Response({'error': 'Timeslot not found'}, status=404)
+
         res_data = {
-            'message': 'Payment successfully received!'
+            'message': 'Payment successfully received and appointment is booked!'
         }
 
         return Response(res_data)
