@@ -188,6 +188,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'user_side.CustomUser'
 
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
 
 # Add your Razorpay keys here
 RAZORPAY_PUBLIC_KEY = 'rzp_test_ZQL2ChZEK9SL7A'

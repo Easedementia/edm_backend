@@ -21,6 +21,7 @@ from admin_side.serializers import *
 from rest_framework.exceptions import NotFound
 import razorpay
 import json
+from .utils import create_google_meet_space
 
 load_dotenv()
 
@@ -445,3 +446,15 @@ class HandlePaymentSuccess(APIView):
         }
 
         return Response(res_data)
+    
+
+
+
+
+class CreateMeetView(APIView):
+    def get(self, request):
+        meet_link = create_google_meet_space()
+        if meet_link:
+            return JsonResponse({'meet_link': meet_link})
+        else:
+            return JsonResponse({'error': 'Failed to create Google Meet link'}, status=500)
