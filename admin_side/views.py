@@ -53,6 +53,18 @@ class UserListView(APIView):
     
 
 
+class UserUpdateView(APIView):
+    def patch(self, request, email):
+        try:
+            user = CustomUser.objects.get(email=email)
+            user.is_blocked = request.data.get('is_blocked', user.is_blocked)
+            user.save()
+            return Response({'status': 'success'}, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+
+
 class AddServiceView(APIView):
     def post(self, request):
         serializer = ServiceSerializer(data=request.data)
@@ -152,6 +164,7 @@ class TimeSlotCreateView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        print("SERIALIZER ERRORS:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 

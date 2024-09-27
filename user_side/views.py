@@ -1,7 +1,7 @@
 import logging
 from django.shortcuts import render
 from .models import CustomUser
-from .serializers import CustomUserSerializer, verifyAccountSerializer, GoogleUserSerializer, EnquirySerializer, AppointmentSerializer, OrderSerializer
+from .serializers import CustomUserSerializer, verifyAccountSerializer, GoogleUserSerializer, EnquirySerializer, AppointmentSerializer, OrderSerializer, FirstPersonClientDetailsSerializer
 from rest_framework.views import APIView,Response
 from django.contrib.auth import get_user_model, authenticate
 from django.conf import settings
@@ -276,7 +276,12 @@ class ListServicesView(APIView):
 
 class DoctorProfileListView(APIView):
     def get(self, request):
-        doctors = DoctorProfile.objects.all()
+        category = request.query_params.get('category')
+        if category:
+            doctors = DoctorProfile.objects.filter(category=category)
+        else:
+            doctors = DoctorProfile.objects.all()
+        
         serializer = DoctorProfileSerializer(doctors, many=True)
         return Response(serializer.data)
     
@@ -424,6 +429,13 @@ class HandlePaymentSuccess(APIView):
 
         # Update the order status to paid
         order.isPaid = True
+
+        meet_link = create_google_meet_space()
+        if meet_link:
+            order.meet_link = meet_link
+        else:
+            return Response({'error': 'Failed to create Google Meet Link'}, status=500)
+        
         order.save()
 
         try:
@@ -440,12 +452,38 @@ class HandlePaymentSuccess(APIView):
             timeslot.save()
         except TimeSlot.DoesNotExist:
             return Response({'error': 'Timeslot not found'}, status=404)
+        
+
+        self.send_order_confirmation_email(order)
 
         res_data = {
-            'message': 'Payment successfully received and appointment is booked!'
+            'message': 'Payment successfully received, appointment is booked, and Google Meet link is generated!',
+            'meet_link': meet_link
         }
 
         return Response(res_data)
+    
+
+
+    def send_order_confirmation_email(self, order):
+        subject = 'Appointment Confirmation'
+        message = (
+            f"Dear {order.user_name}, \n\n"
+            f"Thank you for making an appointment with Easedementia Technologies!\n"
+            f"The appointment details is given below:\n\n"
+            f"Doctor: {order.doctor_name}\n"
+            f"Date: {order.time_slot_date}\n"
+            f"Time: {order.time_slot_start_time}\n\n"
+            f"Google Meet Link: {order.meet_link}\n\n"
+            f"Best regards, \nEasedementia Technologies"
+        )
+        recipient_list = [order.user_email]
+
+        try:
+            send_mail(subject, message, settings.EMAIL_HOST_USER, recipient_list)
+            print("Appointment confirmation email send successfully!")
+        except Exception as e:
+            print(f"An error occured while sending mail: {e}")
     
 
 
@@ -458,3 +496,121 @@ class CreateMeetView(APIView):
             return JsonResponse({'meet_link': meet_link})
         else:
             return JsonResponse({'error': 'Failed to create Google Meet link'}, status=500)
+        
+
+
+class UserDetailsView(APIView):
+    def get(self, request):
+        user_id = request.GET.get('user_id')
+
+        if not user_id:
+            return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            user = CustomUser.objects.get(id=user_id)  
+            serializer = CustomUserSerializer(user) 
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+class UserProfilePictureUpload(APIView):
+    def patch(self, request, user_id):
+        user = get_object_or_404(CustomUser, pk=user_id)
+
+        if 'profile_picture' in request.FILES:
+            user.profile_picture = request.FILES['profile_picture']
+            user.save()
+
+            serializer = CustomUserSerializer(user)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({"detail": "No profile picture provided"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        
+
+
+
+class UserAppointmentsView(APIView):
+    def get(self, request):
+        user_id = request.GET.get('user_id')
+
+        if not user_id:
+            return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            appointments = Order.objects.filter(user_id=user_id)
+            serializer = OrderSerializer(appointments, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+
+
+
+class FirstPersonClientDetailsView(APIView):
+    def post(self, request):
+        name = request.data.get('name', '')
+        if name.strip() == '':
+            return Response({'error': 'Name is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        first_person_client = FirstPersonClientDetails(fullname=name)
+        first_person_client.save()
+        return Response({
+            'message': "Client details saved successfully", 
+            'fullname': name,
+            'id': first_person_client.id
+        }, status=status.HTTP_201_CREATED)
+    
+    
+
+
+
+
+class SendAssessmentEmailView(APIView):
+    def post(self, request, *args, **kwargs):
+        email = request.data.get('email')
+        fullname = request.data.get('fullname')
+        score = request.data.get('score')
+        interpretation = request.data.get('interpretation')
+
+
+        subject = 'Your Assessment Results'
+        message = f'Hello {fullname}, \n\nYour assessment is complete. \n\nScore: {score}\nInterpretation: {interpretation}\n\nThank you for completing assessment!'
+        from_email = 'support.easedementia@gmail.com'
+        recipient_list = [email]
+
+
+        try:
+            send_mail(subject, message, from_email, recipient_list)
+            return JsonResponse({'message': 'Email sent successfully'}, status=200)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+        
+
+
+
+class UpdateAssessmentScoreAPIView(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            client_id = request.data.get('clientId')
+            print("***Client ID***", client_id)
+            score = request.data.get('score')
+            print("***Score***", score)
+
+            client = FirstPersonClientDetails.objects.get(id=client_id)
+            client.assessment_score = score
+            client.save()
+
+            return Response({'message': 'Score updated successfully'}, status=status.HTTP_200_OK)
+        except FirstPersonClientDetails.DoesNotExist:
+            return Response({'error': 'Client not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+        

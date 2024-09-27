@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess, CreateMeetView
+from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess, CreateMeetView, UserAppointmentsView, UserDetailsView, UserProfilePictureUpload, FirstPersonClientDetailsView, SendAssessmentEmailView, UpdateAssessmentScoreAPIView
 
 
 
@@ -16,4 +16,10 @@ urlpatterns = [
     path('pay/<int:id>/', StartPayment.as_view(), name="payment"),
     path('payment/success/', HandlePaymentSuccess.as_view(), name="payment_success"),
     path('create-meet/', CreateMeetView.as_view(), name='create-meet'),
+    path('appointments/', UserAppointmentsView.as_view(), name='user-appointments'),
+    path('user-details/', UserDetailsView.as_view(), name='user-details'),
+    path('user-profile/<int:user_id>/update/', UserProfilePictureUpload.as_view(), name='upload-profile-picture'),
+    path('first-person-client-details/', FirstPersonClientDetailsView.as_view(), name='first-person-client-details'),
+    path('send-first-person-assessment-email/', SendAssessmentEmailView.as_view(), name='send-first-person-assessment-email'),
+    path('update-assessment-score/', UpdateAssessmentScoreAPIView.as_view(), name='update-assessment-score'),
 ]

@@ -78,3 +78,11 @@ class OrderSerializer(serializers.ModelSerializer):
     class Meta:
         model = Order
         fields = '__all__'
+
+
+
+
+class FirstPersonClientDetailsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FirstPersonClientDetails
+        fields = '__all__'

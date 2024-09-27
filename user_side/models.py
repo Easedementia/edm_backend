@@ -104,8 +104,22 @@ class Order(models.Model):
     time_slot_day = models.CharField(max_length=100, null=True)  
     time_slot_start_time = models.TimeField(null=True) 
     time_slot_end_time = models.TimeField(null=True)
+    meet_link = models.URLField(null=True, blank=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
 
 
     def __str__(self):
         return f"Order {self.id} by {self.user_name} for {self.doctor_name}"
+    
+
+
+
+class FirstPersonClientDetails(models.Model):
+    fullname = models.CharField(max_length=255)
+    age = models.CharField(max_length=50)
+    mobile = models.CharField(max_length=15)
+    message = models.TextField()
+    assessment_score = models.IntegerField(null=True, blank=True)
+
+    def __str__(self):
+        return self.fullname
