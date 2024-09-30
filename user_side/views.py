@@ -602,14 +602,67 @@ class UpdateAssessmentScoreAPIView(APIView):
             print("***Client ID***", client_id)
             score = request.data.get('score')
             print("***Score***", score)
+            interpretation = request.data.get('interpretation')
+            print("***Interpretaion***", interpretation)
 
             client = FirstPersonClientDetails.objects.get(id=client_id)
             client.assessment_score = score
+            client.interpretation = interpretation
             client.save()
 
-            return Response({'message': 'Score updated successfully'}, status=status.HTTP_200_OK)
+            return Response({'message': 'Score and interpretation updated successfully'}, status=status.HTTP_200_OK)
         except FirstPersonClientDetails.DoesNotExist:
             return Response({'error': 'Client not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+class UpdateUserDetails(APIView):
+    def put(self, request, client_id):
+        try:
+            client = FirstPersonClientDetails.objects.get(id=client_id)
+            print("CLIENT:", client)
+        except FirstPersonClientDetails.DoesNotExist:
+            return Response({'error': 'Client not found'}, status=status.HTTP_404_NOT_FOUND)
+        
+        serializer = FirstPersonClientDetailsSerializer(client, data=request.data, partial=True)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'message': 'User details updated successfully'}, status=status.HTTP_200_OK)
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        
+
+
+
+class CheckUserEmail(APIView):
+    def post(self, request):
+        email = request.data.get('email')
+        if email is None:
+            return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if CustomUser.objects.filter(email=email).exists():
+            return Response({'exists':True}, status=status.HTTP_200_OK)
+        else:
+            return Response({'exists':False}, status=status.HTTP_200_OK)
+        
+
+
+
+class RegisterNewUserView(APIView):
+    def post(self, request, *args, **kwargs):
+        data = request.data
+
+        try:
+            user = CustomUser.objects.create(
+                fullname = data.get('fullname'),
+                email = data.get('email'),
+                mobile = data.get('mobile'),
+                password = make_password(data.get('password'))
+            )
+            return Response({'message': 'User registered successfully'}, status=status.HTTP_201_CREATED)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         

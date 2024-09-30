@@ -116,10 +116,11 @@ class Order(models.Model):
 
 class FirstPersonClientDetails(models.Model):
     fullname = models.CharField(max_length=255)
+    user_name = models.CharField(max_length=255, null=True, blank=True)
+    user_email = models.EmailField(null=True, blank=True)
     age = models.CharField(max_length=50)
-    mobile = models.CharField(max_length=15)
-    message = models.TextField()
     assessment_score = models.IntegerField(null=True, blank=True)
+    interpretation = models.CharField(max_length=255, null=True, blank=True)
 
     def __str__(self):
         return self.fullname
