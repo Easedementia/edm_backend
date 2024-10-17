@@ -550,6 +550,24 @@ class UserAppointmentsView(APIView):
         
 
 
+class UserAssessmentHistoryView(APIView):
+    def get(self, request):
+        print("***ENTRY***")
+        user_id = request.GET.get('user_id')
+        print("USER ID:", user_id)
+
+        if not user_id:
+            return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            print("***Assessment history***")
+            assessments = FirstPersonClientDetails.objects.filter(user_id=user_id)
+            print("ASSESSMENTS:", assessments)
+            serializer = FirstPersonClientDetailsSerializer(assessments, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
 
 
 
@@ -559,13 +577,49 @@ class FirstPersonClientDetailsView(APIView):
         if name.strip() == '':
             return Response({'error': 'Name is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        first_person_client = FirstPersonClientDetails(fullname=name)
+        first_person_client = FirstPersonClientDetails(
+            fullname=name,
+            assessment_date = datetime.now().date()
+            )
         first_person_client.save()
         return Response({
             'message': "Client details saved successfully", 
             'fullname': name,
-            'id': first_person_client.id
+            'id': first_person_client.id,
+            'assessment_date': first_person_client.assessment_date.strftime("%d/%m/%Y")
         }, status=status.HTTP_201_CREATED)
+    
+
+
+
+# class UpdateUserToModel(APIView):
+#     def post(self, request, *args, **kwargs):
+#         try:
+#             user_id = request.data.get('user')
+#             print("***USER ID***", user_id)
+#             if not user_id:
+#                 return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+#             try:
+#                 user = CustomUser.objects.get(id=user_id)
+#                 print("***USER***", user)
+#             except CustomUser.DoesNotExist:
+#                 return Response({"error": "User not found"}, status=status.HTTP_404_NOT_FOUND)
+            
+#             data = request.data.copy()
+#             print("***DATA***", data)
+#             data['user'] = user.id
+#             print("data['user']", data['user'])
+
+#             serializer = FirstPersonClientDetailsSerializer(data=data)
+#             print("***SERIALIZER***", serializer)
+#             if serializer.is_valid():
+#                 serializer.save()
+#                 return Response(serializer.data, status=status.HTTP_201_CREATED)
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+#         except Exception as e:
+#             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
     
     
 
@@ -597,6 +651,7 @@ class SendAssessmentEmailView(APIView):
 
 class UpdateAssessmentScoreAPIView(APIView):
     def post(self, request, *args, **kwargs):
+        # Existing logic for updating score and interpretation
         try:
             client_id = request.data.get('clientId')
             print("***Client ID***", client_id)
@@ -615,6 +670,37 @@ class UpdateAssessmentScoreAPIView(APIView):
             return Response({'error': 'Client not found'}, status=status.HTTP_404_NOT_FOUND)
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def put(self, request, *args, **kwargs):
+        print("***ENTRY***")
+        # Logic to update the 'user' field
+        try:
+            print("***TRY***")
+            user_id = request.data.get('user')
+            print("USER ID:", user_id)
+            if not user_id:
+                return Response({'error': 'User ID is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+            try:
+                user = CustomUser.objects.get(id=user_id)
+                print("+++USER+++", user)
+            except CustomUser.DoesNotExist:
+                return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+            client_id = request.data.get('clientId')  # Assuming clientId is still required to identify the client
+            print("+++CLIENT ID+++", client_id)
+            client = FirstPersonClientDetails.objects.get(id=client_id)
+            print("+++CLIENT+++", client)
+            client.user = user
+            print("+++CLIENTUSER+++", client.user)
+            client.save()
+
+            return Response({'message': 'User updated successfully'}, status=status.HTTP_200_OK)
+        except FirstPersonClientDetails.DoesNotExist:
+            return Response({'error': 'Client not found'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
         
 
 
@@ -666,4 +752,26 @@ class RegisterNewUserView(APIView):
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         
+
+
+
+class SubscribeNewsLetter(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            data = request.data
+            email = data.get('email')
+
+            if not email:
+                return Response({'error': 'Email is required'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            subscription, created = NewsLetterSubscription.objects.get_or_create(email=email)
+
+            if created:
+                return Response({'message': 'Successfully subscribed'}, status=status.HTTP_201_CREATED)
+            else:
+                return Response({'message': 'Already subscribed'}, status=status.HTTP_200_OK)
+        
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            
         

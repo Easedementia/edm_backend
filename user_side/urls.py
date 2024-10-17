@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess, CreateMeetView, UserAppointmentsView, UserDetailsView, UserProfilePictureUpload, FirstPersonClientDetailsView, SendAssessmentEmailView, UpdateAssessmentScoreAPIView, UpdateUserDetails, CheckUserEmail, RegisterNewUserView
+from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess, CreateMeetView, UserAppointmentsView, UserDetailsView, UserProfilePictureUpload, FirstPersonClientDetailsView, SendAssessmentEmailView, UpdateAssessmentScoreAPIView, UpdateUserDetails, CheckUserEmail, RegisterNewUserView, SubscribeNewsLetter, UserAssessmentHistoryView
 
 
 
@@ -17,6 +17,7 @@ urlpatterns = [
     path('payment/success/', HandlePaymentSuccess.as_view(), name="payment_success"),
     path('create-meet/', CreateMeetView.as_view(), name='create-meet'),
     path('appointments/', UserAppointmentsView.as_view(), name='user-appointments'),
+    path('assessments/', UserAssessmentHistoryView.as_view(), name='assessments'),
     path('user-details/', UserDetailsView.as_view(), name='user-details'),
     path('user-profile/<int:user_id>/update/', UserProfilePictureUpload.as_view(), name='upload-profile-picture'),
     path('first-person-client-details/', FirstPersonClientDetailsView.as_view(), name='first-person-client-details'),
@@ -25,4 +26,6 @@ urlpatterns = [
     path('update-first-person-user-details/<int:client_id>/', UpdateUserDetails.as_view(), name='update-first-person-user-details'),
     path('check-user-email/', CheckUserEmail.as_view(), name='check-user-email'),
     path('register-new-user/', RegisterNewUserView.as_view(), name='register-new-user'),
+    path('subscribe-newsletter/', SubscribeNewsLetter.as_view(), name='subscribe-newsletter'),
+    # path('update-user-to-db/', UpdateUserToModel.as_view(), name='update-user-to-db'),
 ]

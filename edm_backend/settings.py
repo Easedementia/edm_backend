@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'user_side',
     'admin_side',
+    'doctor_side',
 ]
 
 MIDDLEWARE = [

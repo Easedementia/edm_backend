@@ -1,6 +1,8 @@
 from django.db import models
 from admin_side.models import *
 from django.contrib.auth.models import BaseUserManager, AbstractBaseUser, PermissionsMixin, Group, Permission
+from datetime import datetime
+
 
 
 
@@ -115,12 +117,25 @@ class Order(models.Model):
 
 
 class FirstPersonClientDetails(models.Model):
-    fullname = models.CharField(max_length=255)
+    fullname = models.CharField(max_length=255, null=True, blank=True)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
     user_name = models.CharField(max_length=255, null=True, blank=True)
     user_email = models.EmailField(null=True, blank=True)
-    age = models.CharField(max_length=50)
+    age = models.CharField(max_length=50, null=True, blank=True)
     assessment_score = models.IntegerField(null=True, blank=True)
     interpretation = models.CharField(max_length=255, null=True, blank=True)
+    assessment_date = models.DateField(default=datetime.now, blank=True)
 
     def __str__(self):
         return self.fullname
+    
+
+
+
+class NewsLetterSubscription(models.Model):
+    email = models.EmailField(unique=True)
+    subscribed_on = models.DateField(auto_now_add=True)
+
+    def __str__(self):
+        return self.email
+    
