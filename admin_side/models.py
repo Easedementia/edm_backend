@@ -1,5 +1,7 @@
 from django.db import models
 from .validators import validate_svg
+from django.core.exceptions import ValidationError
+
 
 # Create your models here.
 
@@ -50,6 +52,26 @@ class TimeSlot(models.Model):
     end_time = models.TimeField()
     doctor = models.ForeignKey(DoctorProfile, on_delete=models.CASCADE, null=True)
     is_booked = models.BooleanField(default=False)
+
+
+    def clean(self):
+        """
+        Custom validation to ensure that time slots do not overlap for the same doctor.
+        """
+        # Check if start_time is before end_time
+        if self.start_time >= self.end_time:
+            raise ValidationError("Start time must be before end time.")
+        
+        # Check for overlapping time slots for the same doctor on the same day
+        overlapping_slots = TimeSlot.objects.filter(
+            doctor=self.doctor,
+            day=self.day
+        ).exclude(id=self.id)  # Exclude the current instance in case it's an update
+
+        for slot in overlapping_slots:
+            # Check for time overlap
+            if (self.start_time < slot.end_time and self.end_time > slot.start_time):
+                raise ValidationError(f"Time slot {self.start_time} to {self.end_time} overlaps with another time slot.")
 
 
     def __str__(self):

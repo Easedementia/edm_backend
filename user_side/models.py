@@ -61,7 +61,7 @@ class Enquiries(models.Model):
     fullname = models.CharField(max_length=255)
     email = models.EmailField()
     mobile = models.CharField(max_length=15)
-    message = models.TextField()
+    message = models.TextField(blank=False)
 
     def __str__(self):
         return self.fullname

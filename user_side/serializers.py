@@ -69,6 +69,7 @@ class EnquirySerializer(serializers.ModelSerializer):
 
 
 class AppointmentSerializer(serializers.ModelSerializer):
+    doctor = serializers.PrimaryKeyRelatedField(queryset=DoctorProfile.objects.all(), required=True)
     class Meta:
         model = Appointment
         fields = '__all__'

@@ -22,6 +22,7 @@ from rest_framework.exceptions import NotFound
 import razorpay
 import json
 from .utils import create_google_meet_space
+from django.middleware.csrf import get_token
 
 load_dotenv()
 
@@ -103,36 +104,36 @@ def get_tokens_for_user(user):
 
 class UserLoginView(APIView):
     def post(self, request, format=None):
-        print("***Entry***")
         data = request.data
-        print("DATA:", data)
         email = data.get('email', None)
-        print("Email:", email)
         password = data.get('password', None)
-        print("Password:", password)
-        user_details = CustomUser.objects.filter(email=email, password=password)
-        print("User details:", user_details)
-        user = authenticate(request, email=email, password=password)
-        print("User:", user)
 
+        # Attempt to retrieve the user by email directly from CustomUser
+        user = get_object_or_404(CustomUser, email=email)
+
+        # Check if the user is inactive
+        if not user.is_active:
+            return Response({"No active": "This account is not active!!"}, status=status.HTTP_403_FORBIDDEN)
+
+        # Authenticate the user
+        user = authenticate(request, email=email, password=password)
+
+        # If user is authenticated
         if user is not None:
-            if user.is_active:
-                tokens = get_tokens_for_user(user)
-                response_data = {
-                    "data": tokens,
-                    "user": {
-                        'id': user.id,
-                        'email': user.email,
-                        'fullname': user.fullname,
-                        'mobile': user.mobile,
-                    },
-                    "Success": "Login successfully"
-                }
-                csrf.get_token(request)
-                return JsonResponse(response_data, status=status.HTTP_200_OK)
-            else:
-                return Response({"No active": "This account is not active!!"}, status=status.HTTP_403_FORBIDDEN)
+            tokens = get_tokens_for_user(user)
+            response_data = {
+                "data": tokens,
+                "user": {
+                    'id': user.id,
+                    'email': user.email,
+                    'fullname': user.fullname,
+                    'mobile': user.mobile,
+                },
+                "Success": "Login successfully"
+            }
+            return JsonResponse(response_data, status=status.HTTP_200_OK)
         else:
+            # Authentication failed, incorrect username or password
             return Response({"Invalid": "Invalid username or password!!"}, status=status.HTTP_401_UNAUTHORIZED)
         
 
@@ -193,64 +194,75 @@ class VerifyOTP(APIView):
 class GoogleAuthLogin(APIView):
     def post(self, request):
         data = request.data
-        print('*****', data)
         email = data.get('email', None)
-        if CustomUser.objects.filter(email=email).exists():
+
+        # Check if the user exists
+        try:
             user = CustomUser.objects.get(email=email)
-            if user is not None:
-                if user.is_active:
-                    data = get_tokens_for_user(user)
-                    response = JsonResponse({
-                        "data": data,
-                        "user": {
-                            "id": user.id,
-                            "username": user.email,
-                            "name": user.fullname,
-                        }
-                    })
-                    response.set_cookie(
-                        key = settings.SIMPLE_JWT['AUTH_COOKIE'],
-                        value = data["access"],
-                        expires = settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
-                        secure = settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-                        httponly = settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
-                        samesite = settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
-                    )
-                    csrf.get_token(request)
-                    response.data = {"Success" : "Login successfully","data":data}
-                    return response
-        else:
+
+            if user.is_active:
+                data = get_tokens_for_user(user)
+                response = JsonResponse({
+                    "Success": "Login successfully",
+                    "data": data,
+                    "user": {
+                        "id": user.id,
+                        "username": user.email,
+                        "name": user.fullname,
+                    }
+                })
+                response.set_cookie(
+                    key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+                    value=data["access"],
+                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                    httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+                )
+                get_token(request)  # Set CSRF token
+                return response
+            else:
+                return JsonResponse({"error": "User inactive"}, status=status.HTTP_400_BAD_REQUEST)
+
+        except CustomUser.DoesNotExist:
+            # User does not exist, handle registration
+            # This is where the inactive block should be triggered
             serializer = GoogleUserSerializer(data=request.data)
             if serializer.is_valid():
-                serializer.save()
-                user = CustomUser.objects.get(email=email)
-                if user is not None:
-                    if user.is_active:
-                        data = get_tokens_for_user(user)
-                        response = JsonResponse({
-                            "data": data,
-                            "user": {
-                                "id": user.id,
-                                "username": user.email,
-                                "name": user.fullname,
-                            }
-                        })
-                        response.set_cookie(
-                            key = settings.SIMPLE_JWT['AUTH_COOKIE'],
-                            value = data["access"],
-                            expires = settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
-                            secure = settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
-                            httponly = settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
-                            samesite = settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
-                        )
-                        csrf.get_token(request)
-                        response.data = {"Success" : "Login successfully","data":data}
-                        return response
-            else:
-                return JsonResponse({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
-        
-        return JsonResponse({"error": "User not found or inactive"}, status=status.HTTP_404_NOT_FOUND)
-    
+                user = serializer.save()  # Save the new user
+                data = get_tokens_for_user(user)
+                response = JsonResponse({
+                    "Success": "User registered and logged in successfully",
+                    "data": data,
+                    "user": {
+                        "id": user.id,
+                        "username": user.email,
+                        "name": user.fullname,
+                    }
+                })
+                response.set_cookie(
+                    key=settings.SIMPLE_JWT['AUTH_COOKIE'],
+                    value=data["access"],
+                    expires=settings.SIMPLE_JWT['ACCESS_TOKEN_LIFETIME'],
+                    secure=settings.SIMPLE_JWT['AUTH_COOKIE_SECURE'],
+                    httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
+                    samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
+                )
+                get_token(request)  # Set CSRF token
+                return JsonResponse({
+                    "Success": "User registered successfully",
+                    "data": data,
+                    "user": {
+                        "id": user.id,
+                        "username": user.email,
+                        "name": user.fullname,
+                    }
+                }, status=status.HTTP_201_CREATED)
+
+            # If serializer is not valid
+            return JsonResponse({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 
 
@@ -633,6 +645,9 @@ class SendAssessmentEmailView(APIView):
         score = request.data.get('score')
         interpretation = request.data.get('interpretation')
 
+        if not all([email, fullname, score, interpretation]):
+            return JsonResponse({'error': 'All fields are required'}, status=status.HTTP_400_BAD_REQUEST)
+
 
         subject = 'Your Assessment Results'
         message = f'Hello {fullname}, \n\nYour assessment is complete. \n\nScore: {score}\nInterpretation: {interpretation}\n\nThank you for completing assessment!'
@@ -659,6 +674,10 @@ class UpdateAssessmentScoreAPIView(APIView):
             print("***Score***", score)
             interpretation = request.data.get('interpretation')
             print("***Interpretaion***", interpretation)
+
+
+            if not client_id or score is None or not interpretation:
+                return Response({'error': 'clientId, score, and interpretation are required fields'}, status=status.HTTP_400_BAD_REQUEST)
 
             client = FirstPersonClientDetails.objects.get(id=client_id)
             client.assessment_score = score

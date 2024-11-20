@@ -9,7 +9,10 @@ from user_side.serializers import *
 from .models import *
 from user_side.models import CustomUser
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.generics import get_object_or_404   
+from rest_framework.generics import get_object_or_404 
+from django.contrib.auth import get_user_model
+from django.contrib.auth.hashers import check_password
+from django.db.models import Q
 
 # Create your views here.
 
@@ -18,28 +21,27 @@ from rest_framework.generics import get_object_or_404
 class AdminLoginView(APIView):
     def post(self, request, format=None):
         email = request.data.get('email')
-
         password = request.data.get('password')
         print('******email******', email)
 
-
-        user = authenticate(request, email=email, password=password)
-        print('***********', user)
-
-        if user is not None and user.is_staff:
-            refresh = RefreshToken.for_user(user)
-            tokens = {
-                'refresh': str(refresh),
-                'access': str(refresh.access_token),
-                'user':{
-                    'id': user.id,
-                    'email': user.email,
-                    'fullname': user.fullname,
-                    'mobile': user.mobile,
+        try:
+            user = get_user_model().objects.get(email=email)
+            if user and user.is_staff and check_password(password, user.password):
+                refresh = RefreshToken.for_user(user)
+                tokens = {
+                    'refresh': str(refresh),
+                    'access': str(refresh.access_token),
+                    'user': {
+                        'id': user.id,
+                        'email': user.email,
+                        'fullname': user.fullname,
+                        'mobile': user.mobile,
+                    }
                 }
-            }
-            return Response(tokens, status=status.HTTP_200_OK)
-        else:
+                return Response(tokens, status=status.HTTP_200_OK)
+            else:
+                return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+        except get_user_model().DoesNotExist:
             return Response({'error': 'Invalid Credentials'}, status=status.HTTP_401_UNAUTHORIZED)
         
 
@@ -87,6 +89,8 @@ class ServiceList(APIView):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
 
 class ServiceDetail(APIView):
     def get(self, request, pk):
@@ -144,7 +148,7 @@ class DoctorProfileDetailView(APIView):
             doctor = DoctorProfile.objects.get(id=id)
         except DoctorProfile.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
-        serializer = DoctorProfileSerializer(doctor, data=request.data, context={'request': request})
+        serializer = DoctorProfileSerializer(doctor, data=request.data, context={'request': request}, partial=True)
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
@@ -162,8 +166,38 @@ class TimeSlotCreateView(APIView):
     def post(self, request):
         serializer = TimeSlotSerializer(data=request.data)
         if serializer.is_valid():
+            # Extract data
+            start_time = serializer.validated_data['start_time']
+            end_time = serializer.validated_data['end_time']
+            day = serializer.validated_data['day']
+            doctor = serializer.validated_data['doctor']
+
+            # Validation for start_time and end_time
+            if start_time >= end_time:
+                return Response(
+                    {'non_field_errors': ['Start time must be before end time.']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # Check if the new time slot overlaps with existing ones
+            overlapping_timeslot = TimeSlot.objects.filter(
+                doctor=doctor,
+                day=day
+            ).filter(
+                Q(start_time__lt=end_time) & Q(end_time__gt=start_time)
+            ).exists()
+
+            if overlapping_timeslot:
+                return Response(
+                    {'non_field_errors': ['Time slot overlaps with another time slot.']},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            # If no overlap, save the new time slot
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        # If serializer is invalid, return errors
         print("SERIALIZER ERRORS:", serializer.errors)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
@@ -203,4 +237,3 @@ class UpdateAppointmentStatusView(APIView):
             return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
         except Order.DoesNotExist:
             return Response({'error': 'Appointment not found'}, status=status.HTTP_404_NOT_FOUND)
-        

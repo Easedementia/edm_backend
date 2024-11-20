@@ -113,8 +113,8 @@ TEMPLATES = [
     },
 ]
 
-# WSGI_APPLICATION = 'edm_backend.wsgi.application'
-ASGI_APPLICATION = 'edm_backend.asgi.application'
+WSGI_APPLICATION = 'edm_backend.wsgi.application'
+# ASGI_APPLICATION = 'edm_backend.asgi.application'
 
 
 # Database
