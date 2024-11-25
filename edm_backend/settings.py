@@ -88,10 +88,11 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',  
+    'https://master.d35tyda09dui4h.amplifyapp.com/',
 )
 
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://master.d35tyda09dui4h.amplifyapp.com/',]
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = False  # Change to True in production
 SESSION_COOKIE_SECURE = False  # Change to True in production
