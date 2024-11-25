@@ -76,3 +76,17 @@ class TimeSlot(models.Model):
 
     def __str__(self):
         return f"{self.doctor.doctor_name} - {self.day} {self.start_time} to {self.end_time}"
+    
+
+
+
+
+
+class BookedSlot(models.Model):
+    timeslot = models.ForeignKey(TimeSlot, on_delete=models.CASCADE, related_name="booked_slots")
+    date = models.DateField()
+    is_booked = models.BooleanField(default=False)
+
+
+    def __str__(self):
+        return f"{self.timeslot} - {self.date} - {'Booked' if self.is_booked else 'Available'}"

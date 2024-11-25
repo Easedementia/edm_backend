@@ -23,6 +23,7 @@ import razorpay
 import json
 from .utils import create_google_meet_space
 from django.middleware.csrf import get_token
+from django.utils.timezone import make_aware
 
 load_dotenv()
 
@@ -413,11 +414,25 @@ class HandlePaymentSuccess(APIView):
         raz_signature = res.get('razorpay_signature', "")
         appointment_id = res.get('appointment_id', None)
         slot_id = res.get('slot_id', None)
+        selected_date = res.get('selected_date', None)
+        print("Selected Date:", selected_date)
 
         if not appointment_id:
             return Response({'error': 'Appointment ID not provided'}, status=400)
+        
+        if not selected_date:
+            return Response({'error': 'Selected date not provided'}, status=400)
+            
 
         print('Order Payment ID:', ord_id)
+
+        try:
+            selected_date = datetime.strptime(selected_date, "%B %d, %Y")
+            selected_date = make_aware(selected_date)
+            print("UPDATED SELECTED DATE:", selected_date)
+        except ValueError:
+            return Response({'error': 'Invalid date format. Expected format: November 26, 2024'}, status=400)
+        
 
         # Get the order by payment_id
         try:
@@ -442,11 +457,11 @@ class HandlePaymentSuccess(APIView):
         # Update the order status to paid
         order.isPaid = True
 
-        meet_link = create_google_meet_space()
-        if meet_link:
-            order.meet_link = meet_link
-        else:
-            return Response({'error': 'Failed to create Google Meet Link'}, status=500)
+        # meet_link = create_google_meet_space()
+        # if meet_link:
+        #     order.meet_link = meet_link
+        # else:
+        #     return Response({'error': 'Failed to create Google Meet Link'}, status=500)
         
         order.save()
 
@@ -460,8 +475,13 @@ class HandlePaymentSuccess(APIView):
 
         try:
             timeslot = TimeSlot.objects.get(id=slot_id)
-            timeslot.is_booked = True
-            timeslot.save()
+            BookedSlot.objects.create(
+                timeslot = timeslot,
+                date = selected_date,
+                is_booked = True
+            )
+            # timeslot.is_booked = True
+            # timeslot.save()
         except TimeSlot.DoesNotExist:
             return Response({'error': 'Timeslot not found'}, status=404)
         
@@ -470,7 +490,7 @@ class HandlePaymentSuccess(APIView):
 
         res_data = {
             'message': 'Payment successfully received, appointment is booked, and Google Meet link is generated!',
-            'meet_link': meet_link
+            # 'meet_link': meet_link
         }
 
         return Response(res_data)
