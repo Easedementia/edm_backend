@@ -92,7 +92,7 @@ CORS_ORIGIN_WHITELIST = (
 )
 
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://www.easedementia.in', 'https://easedementia.in']
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = False  # Change to True in production
 SESSION_COOKIE_SECURE = False  # Change to True in production
