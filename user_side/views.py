@@ -37,61 +37,11 @@ print("EMAIL_HOST_PASSWORD", EMAIL_HOST_PASSWORD)
 
 logger = logging.getLogger(__name__)
 
-# class UserSignupView(APIView):
-#     def post(self, request, format=None):
-#         print("***entry***")
-#         data = request.data
-#         print('***REQUEST DATA***', data)
-
-#         required_fields = ['fullname', 'email', 'mobile', 'password']
-#         missing_fields = [field for field in required_fields if field not in data]
-
-#         if missing_fields:
-#             return Response(
-#                 {field: f'{field} is required' for field in missing_fields}, 
-#                 status=status.HTTP_400_BAD_REQUEST
-#             )
-        
-#         serializer = CustomUserSerializer(data=data)
-#         print('***SERIALIZER***', serializer)
-
-#         if serializer.is_valid():
-#             try:
-#                 print("***SERIALIZER IS VALID***")
-#                 # serializer.validated_data['password'] = make_password(serializer.validated_data['password'])
-#                 user = serializer.save()
-#                 print("***USER:***", user)
-#                 print("-----EMAIL----", serializer.data['email'])
-#                 EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
-#                 EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
-#                 print("EMAIL_HOST_USER:", EMAIL_HOST_USER)
-#                 print("EMAIL_HOST_PASSWORD", EMAIL_HOST_PASSWORD)
-#                 send_otp_via_email(serializer.data['email'])
-#                 print("---OTP---")
-#                 return Response(
-#                     {
-#                         'message': 'User created successfully, Check email.',
-#                         'email': user.email,
-#                         'data': serializer.data,
-#                     },
-#                     status=status.HTTP_201_CREATED
-#                 )
-#             except Exception as e:
-#                 print("***EXCEPTION OCCURRED***", str(e))
-#                 logger.error("Error creating user: %s", str(e))
-#                 return Response(
-#                     {'error': 'An error occurred while creating the user'},
-#                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
-#                 )
-#         else:
-#             print("***SERIALIZER ERRORS***", serializer.errors)
-#             logger.error("Serializer errors: %s", serializer.errors)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class UserSignupView(APIView):
     def post(self, request, format=None):
+        print("***entry***")
         data = request.data
+        print('***REQUEST DATA***', data)
 
         required_fields = ['fullname', 'email', 'mobile', 'password']
         missing_fields = [field for field in required_fields if field not in data]
@@ -103,11 +53,21 @@ class UserSignupView(APIView):
             )
         
         serializer = CustomUserSerializer(data=data)
+        print('***SERIALIZER***', serializer)
 
         if serializer.is_valid():
             try:
+                print("***SERIALIZER IS VALID***")
+                # serializer.validated_data['password'] = make_password(serializer.validated_data['password'])
                 user = serializer.save()
+                print("***USER:***", user)
+                print("-----EMAIL----", serializer.data['email'])
+                EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')  
+                EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+                print("EMAIL_HOST_USER:", EMAIL_HOST_USER)
+                print("EMAIL_HOST_PASSWORD", EMAIL_HOST_PASSWORD)
                 send_otp_via_email(serializer.data['email'])
+                print("---OTP---")
                 return Response(
                     {
                         'message': 'User created successfully, Check email.',
@@ -117,12 +77,52 @@ class UserSignupView(APIView):
                     status=status.HTTP_201_CREATED
                 )
             except Exception as e:
+                print("***EXCEPTION OCCURRED***", str(e))
+                logger.error("Error creating user: %s", str(e))
                 return Response(
                     {'error': 'An error occurred while creating the user'},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
         else:
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            print("***SERIALIZER ERRORS***", serializer.errors)
+            logger.error("Serializer errors: %s", serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# class UserSignupView(APIView):
+#     def post(self, request, format=None):
+#         data = request.data
+
+#         required_fields = ['fullname', 'email', 'mobile', 'password']
+#         missing_fields = [field for field in required_fields if field not in data]
+
+#         if missing_fields:
+#             return Response(
+#                 {field: f'{field} is required' for field in missing_fields}, 
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+        
+#         serializer = CustomUserSerializer(data=data)
+
+#         if serializer.is_valid():
+#             try:
+#                 user = serializer.save()
+#                 send_otp_via_email(serializer.data['email'])
+#                 return Response(
+#                     {
+#                         'message': 'User created successfully, Check email.',
+#                         'email': user.email,
+#                         'data': serializer.data,
+#                     },
+#                     status=status.HTTP_201_CREATED
+#                 )
+#             except Exception as e:
+#                 return Response(
+#                     {'error': 'An error occurred while creating the user'},
+#                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
+#                 )
+#         else:
+#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     
 
