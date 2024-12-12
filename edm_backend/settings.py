@@ -81,14 +81,13 @@ REST_FRAMEWORK = {
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    'https://master.d35tyda09dui4h.amplifyapp.com/',
+    'https://master.d35tyda09dui4h.amplifyapp.com',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_ALL_ORIGINS = True
 CORS_ORIGIN_WHITELIST = (
     'http://localhost:3000',  
-    'https://master.d35tyda09dui4h.amplifyapp.com/',
+    'https://master.d35tyda09dui4h.amplifyapp.com',
 )
 
 
