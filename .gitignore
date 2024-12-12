@@ -1,5 +1,5 @@
 edm_backend/.env
 credentials.json
 token.json
-*.pyc
-__pycache__/
+"*.pyc" 
+"__pycache__/" 
