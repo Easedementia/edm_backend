@@ -233,10 +233,14 @@ class GoogleAuthLogin(APIView):
     def post(self, request):
         data = request.data
         email = data.get('email', None)
+        fullname = data.get('fullname', None)
 
-        # Check if the user exists
+        print(f"Email: {email}, Fullname: {fullname}")
+
         try:
             user = CustomUser.objects.get(email=email)
+
+            print(f"User found: {user.fullname}")
 
             if user.is_active:
                 data = get_tokens_for_user(user)
@@ -257,17 +261,18 @@ class GoogleAuthLogin(APIView):
                     httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
                     samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
                 )
-                get_token(request)  # Set CSRF token
+                get_token(request)
                 return response
             else:
                 return JsonResponse({"error": "User inactive"}, status=status.HTTP_400_BAD_REQUEST)
 
         except CustomUser.DoesNotExist:
-            # User does not exist, handle registration
-            # This is where the inactive block should be triggered
-            serializer = GoogleUserSerializer(data=request.data)
+            serializer = GoogleUserSerializer(data={
+                'email': email,
+                'fullname': fullname,
+            })
             if serializer.is_valid():
-                user = serializer.save()  # Save the new user
+                user = serializer.save()
                 data = get_tokens_for_user(user)
                 response = JsonResponse({
                     "Success": "User registered and logged in successfully",
@@ -275,7 +280,7 @@ class GoogleAuthLogin(APIView):
                     "user": {
                         "id": user.id,
                         "username": user.email,
-                        "name": user.fullname,
+                        "name": user.fullname,  # Return the fullname
                     }
                 })
                 response.set_cookie(
@@ -286,19 +291,11 @@ class GoogleAuthLogin(APIView):
                     httponly=settings.SIMPLE_JWT['AUTH_COOKIE_HTTP_ONLY'],
                     samesite=settings.SIMPLE_JWT['AUTH_COOKIE_SAMESITE']
                 )
-                get_token(request)  # Set CSRF token
-                return JsonResponse({
-                    "Success": "User registered successfully",
-                    "data": data,
-                    "user": {
-                        "id": user.id,
-                        "username": user.email,
-                        "name": user.fullname,
-                    }
-                }, status=status.HTTP_201_CREATED)
+                get_token(request)
+                return response
 
-            # If serializer is not valid
             return JsonResponse({"error": "Invalid data"}, status=status.HTTP_400_BAD_REQUEST)
+
 
 
 
