@@ -82,6 +82,7 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     'https://master.d35tyda09dui4h.amplifyapp.com',
+    "https://www.easedementia.in",
 ]
 
 CORS_ALLOW_CREDENTIALS = True

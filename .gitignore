@@ -3,3 +3,4 @@ credentials.json
 token.json
 "*.pyc" 
 "__pycache__/" 
+db.sqlite3
