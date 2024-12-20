@@ -232,6 +232,7 @@ class VerifyOTP(APIView):
 class GoogleAuthLogin(APIView):
     def post(self, request):
         data = request.data
+        print("REQUEST DATA:", data)
         email = data.get('email', None)
         fullname = data.get('fullname', None)
 
@@ -239,8 +240,11 @@ class GoogleAuthLogin(APIView):
 
         try:
             user = CustomUser.objects.get(email=email)
+            user.fullname = fullname
+            user.save()
 
             print(f"User found: {user.fullname}")
+
 
             if user.is_active:
                 data = get_tokens_for_user(user)
