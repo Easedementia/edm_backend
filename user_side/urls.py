@@ -1,11 +1,14 @@
 from django.urls import path
+
 from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess, CreateMeetView, UserAppointmentsView, UserDetailsView, UserProfilePictureUpload, FirstPersonClientDetailsView, SendAssessmentEmailView, UpdateAssessmentScoreAPIView, UpdateUserDetails, CheckUserEmail, RegisterNewUserView, SubscribeNewsLetter, UserAssessmentHistoryView, SaveAssessmentView
+from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess, CreateMeetView, UserAppointmentsView, UserDetailsView, UserProfilePictureUpload, FirstPersonClientDetailsView, SendAssessmentEmailView, UpdateAssessmentScoreAPIView, UpdateUserDetails, CheckUserEmail, RegisterNewUserView, SubscribeNewsLetter, UserAssessmentHistoryView, UpdateUserDetailsView, CustomTokenRefreshView, BookedTimeSlotsView
 
 
 
 urlpatterns = [
     path('signup/', UserSignupView.as_view(), name='signup'),
     path('login/', UserLoginView.as_view(), name='login'),
+    path('auth/refresh/', CustomTokenRefreshView.as_view(), name='custom_token_refresh'),
     path('verify-otp/', VerifyOTP.as_view(), name='otp-verification'),
     path('user-google-auth/', GoogleAuthLogin.as_view(), name='user-google-auth'),
     path('enquiries/', EnquiryView.as_view(), name='enquiries'),
@@ -29,4 +32,6 @@ urlpatterns = [
     path('subscribe-newsletter/', SubscribeNewsLetter.as_view(), name='subscribe-newsletter'),
     path('save-assessment/', SaveAssessmentView.as_view(), name='save-assessment'),
     # path('update-user-to-db/', UpdateUserToModel.as_view(), name='update-user-to-db'),
+    path('update-user-details/', UpdateUserDetailsView.as_view(), name='update-user-details'),
+    path('selected-slots/', BookedTimeSlotsView.as_view(), name='selected-slots'),
 ]

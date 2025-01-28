@@ -24,6 +24,8 @@ import json
 from .utils import create_google_meet_space
 from django.middleware.csrf import get_token
 from django.utils.timezone import make_aware
+from rest_framework_simplejwt.views import TokenRefreshView
+
 
 load_dotenv()
 
@@ -137,6 +139,24 @@ def get_tokens_for_user(user):
         'refresh': str(refresh),
         'access': str(refresh.access_token),
     }
+
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    def post(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        try:
+            serializer.is_valid(raise_exception=True)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+        
+        data = serializer.validated_data
+        access_token = data.get('access')
+        return Response({
+            "access": access_token,
+            "message": "Token refreshed successfully"
+        })
+
 
 
 
@@ -255,6 +275,9 @@ class GoogleAuthLogin(APIView):
                         "id": user.id,
                         "username": user.email,
                         "name": user.fullname,
+                        "fullname": user.fullname,
+                        "email": user.email,
+                        "mobile": user.mobile if user.mobile else "None",
                     }
                 })
                 response.set_cookie(
@@ -343,11 +366,31 @@ class DoctorTimeSlotsView(APIView):
         timeslots = TimeSlot.objects.filter(doctor_id=doctor_id)
         serializer = TimeSlotSerializer(timeslots, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
+    
+
+
+class BookedTimeSlotsView(APIView):
+    def get(self, request):
+        # print("DOCTOR ID:", request.query_params.get("doctor_id"))
+        doctor_id = request.query_params.get("doctor_id")
+        date = request.query_params.get("date")
+        
+        appointments = Appointment.objects.filter(doctor_id=doctor_id, date=date).values_list("time_slot_id", flat=True)
+        
+        appointments_list = list(appointments)
+        # print(appointments_list)
+
+        return Response({"appointments": appointments_list}, status=status.HTTP_200_OK)
 
 
 
 class CreateAppointmentView(APIView):
     def post(self, request, *args, **kwargs):
+        # print("request data:", request.data)
+        if Appointment.objects.filter(doctor_id = request.data.get("doctor"), date=request.data.get("date"), time_slot=request.data.get("time_slot")).exists():
+            return Response({"message": "This time slot is not available.", "status":"not available"}, status=status.HTTP_200_OK)
+
+        
         serializer = AppointmentSerializer(data=request.data)
         if serializer.is_valid():
             appointment = serializer.save()
@@ -359,9 +402,9 @@ class CreateAppointmentView(APIView):
 
 class StartPayment(APIView):
     def post(self, request, id):
-        print("*****************************")
-        print("REQUEST DATA:", request.data)
-        print("*****************************")
+        # print("*****************************")
+        # print("REQUEST DATA:", request.data)
+        # print("*****************************")
         user_id = request.data['user_id']
         user_name = request.data['user_name']
         user_email = request.data['user_email']
@@ -375,9 +418,9 @@ class StartPayment(APIView):
         selected_end_time = request.data['selected_end_time']
 
         try:
-            print("***USER DETAILS***")
+            # print("***USER DETAILS***")
             user = CustomUser.objects.get(id=user_id)
-            print("***USER***", user)
+            # print("***USER***", user)
         except CustomUser.DoesNotExist:
             raise NotFound("User not found")
 
@@ -412,18 +455,18 @@ class StartPayment(APIView):
                 time_slot_end_time = selected_end_time
             )
             
-            print("******************")
-            print('***order***', order)
-            print("******************")
+            # print("******************")
+            # print('***order***', order)
+            # print("******************")
 
             serializer = OrderSerializer(order)
-            print('***serializer data***', serializer.data)
+            # print('***serializer data***', serializer.data)
 
             data = {
                 "payment": payment,
                 "order": serializer.data
             }
-            print('***data***', data)
+            # print('***data***', data)
             
             return Response(data)
         
@@ -438,14 +481,14 @@ class StartPayment(APIView):
 
 class HandlePaymentSuccess(APIView):
     def post(self, request):
-        print('*********handle_payment_success************')
+        # print('*********handle_payment_success************')
         try:
             # Ensure proper parsing of request body
             res = json.loads(request.body)
         except json.JSONDecodeError:
             return Response({'error': 'Invalid JSON'}, status=400)
 
-        print('***res***', res)
+        # print('***res***', res)
 
         ord_id = res.get('razorpay_order_id', "")
         raz_pay_id = res.get('razorpay_payment_id', "")
@@ -453,7 +496,7 @@ class HandlePaymentSuccess(APIView):
         appointment_id = res.get('appointment_id', None)
         slot_id = res.get('slot_id', None)
         selected_date = res.get('selected_date', None)
-        print("Selected Date:", selected_date)
+        # print("Selected Date:", selected_date)
 
         if not appointment_id:
             return Response({'error': 'Appointment ID not provided'}, status=400)
@@ -467,7 +510,7 @@ class HandlePaymentSuccess(APIView):
         try:
             selected_date = datetime.strptime(selected_date, "%B %d, %Y")
             selected_date = make_aware(selected_date)
-            print("UPDATED SELECTED DATE:", selected_date)
+            # print("UPDATED SELECTED DATE:", selected_date)
         except ValueError:
             return Response({'error': 'Invalid date format. Expected format: November 26, 2024'}, status=400)
         
@@ -850,6 +893,34 @@ class SubscribeNewsLetter(APIView):
         
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+
+class UpdateUserDetailsView(APIView):
+    permission_classes = [IsAuthenticated]
+    
+    def patch(self, request, *args, **kwargs):
+        user = request.user
+        print("User:", user)
+        data = request.data
+
+
+        user.fullname = data.get('fullname', user.fullname)
+        print("Fullname:", user.fullname)
+        user.mobile = data.get('mobile', user.mobile)
+        print("Mobile:", user.mobile)
+        user.save()
+        data = {
+            "id": user.id,
+            "username": user.email,
+            "name": user.fullname,
+            "fullname": user.fullname,
+            "email": user.email,
+            "mobile": user.mobile if user.mobile else "None",
+        }
+
+        return Response({"message": "User details updated successfully", "user":data}, status=status.HTTP_200_OK)
             
         
 
