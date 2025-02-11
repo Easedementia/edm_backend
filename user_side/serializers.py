@@ -89,3 +89,10 @@ class FirstPersonClientDetailsSerializer(serializers.ModelSerializer):
     class Meta:
         model = FirstPersonClientDetails
         fields = '__all__'
+
+
+
+class SelfAssessmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SelfAssessment
+        fields = ['id', 'fullname', 'email', 'mobile', 'user_id', 'date_taken', 'score']

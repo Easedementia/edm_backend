@@ -1,6 +1,6 @@
 import logging
 from django.shortcuts import render
-from .models import CustomUser
+from .models import *
 from .serializers import CustomUserSerializer, verifyAccountSerializer, GoogleUserSerializer, EnquirySerializer, AppointmentSerializer, OrderSerializer, FirstPersonClientDetailsSerializer
 from rest_framework.views import APIView,Response
 from django.contrib.auth import get_user_model, authenticate
@@ -852,3 +852,22 @@ class SubscribeNewsLetter(APIView):
             return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
             
         
+
+
+
+
+
+class SaveAssessmentView(APIView):
+    def post(self, request):
+        try:
+            data = request.data
+            assessment = SelfAssessment.objects.create(
+                fullname = data.get('fullname'),
+                email = data.get('email'),
+                mobile = data.get('mobile'),
+                user_id = data.get('user_id'),
+                score = data.get('score')
+            )
+            return Response({'message': 'Assessment saved successfully'}, status=status.HTTP_201_CREATED)
+        except Exception as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)

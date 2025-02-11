@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess, CreateMeetView, UserAppointmentsView, UserDetailsView, UserProfilePictureUpload, FirstPersonClientDetailsView, SendAssessmentEmailView, UpdateAssessmentScoreAPIView, UpdateUserDetails, CheckUserEmail, RegisterNewUserView, SubscribeNewsLetter, UserAssessmentHistoryView
+from .views import UserSignupView, UserLoginView, VerifyOTP, GoogleAuthLogin, EnquiryView, ListServicesView, DoctorProfileListView, DoctorTimeSlotsView, CreateAppointmentView, StartPayment, HandlePaymentSuccess, CreateMeetView, UserAppointmentsView, UserDetailsView, UserProfilePictureUpload, FirstPersonClientDetailsView, SendAssessmentEmailView, UpdateAssessmentScoreAPIView, UpdateUserDetails, CheckUserEmail, RegisterNewUserView, SubscribeNewsLetter, UserAssessmentHistoryView, SaveAssessmentView
 
 
 
@@ -27,5 +27,6 @@ urlpatterns = [
     path('check-user-email/', CheckUserEmail.as_view(), name='check-user-email'),
     path('register-new-user/', RegisterNewUserView.as_view(), name='register-new-user'),
     path('subscribe-newsletter/', SubscribeNewsLetter.as_view(), name='subscribe-newsletter'),
+    path('save-assessment/', SaveAssessmentView.as_view(), name='save-assessment'),
     # path('update-user-to-db/', UpdateUserToModel.as_view(), name='update-user-to-db'),
 ]

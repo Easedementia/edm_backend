@@ -44,3 +44,6 @@ class TimeSlotSerializer(serializers.ModelSerializer):
 
     start_time = serializers.TimeField(format='%H:%M:%S')  # Ensure correct time format
     end_time = serializers.TimeField(format='%H:%M:%S')
+
+
+

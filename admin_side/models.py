@@ -90,3 +90,11 @@ class BookedSlot(models.Model):
 
     def __str__(self):
         return f"{self.timeslot} - {self.date} - {'Booked' if self.is_booked else 'Available'}"
+    
+
+
+
+
+
+
+

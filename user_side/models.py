@@ -139,3 +139,17 @@ class NewsLetterSubscription(models.Model):
     def __str__(self):
         return self.email
     
+
+
+
+class SelfAssessment(models.Model):
+    fullname = models.CharField(max_length=255)
+    email = models.EmailField()
+    mobile = models.CharField(max_length=20, null=True, blank=True)
+    user_id = models.IntegerField()
+    date_taken = models.DateTimeField(auto_now_add=True)
+    score = models.IntegerField()
+
+
+    def __str__(self):
+        return f"{self.fullname} - Score: {self.score}"

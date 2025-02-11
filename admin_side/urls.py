@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import AdminLoginView, UserListView, UserUpdateView, AddServiceView, ServiceList, ServiceDetail, DoctorProfileCreateView, DoctorProfileListView, DoctorProfileDetailView, TimeSlotCreateView, AppointmentListView, UpdateAppointmentStatusView, TimeSlotListView
+from .views import AdminLoginView, UserListView, UserUpdateView, AddServiceView, ServiceList, ServiceDetail, DoctorProfileCreateView, DoctorProfileListView, DoctorProfileDetailView, TimeSlotCreateView, AppointmentListView, UpdateAppointmentStatusView, TimeSlotListView, SelfAssessmentListView, FirstPersonAssessmentListView
 
 
 urlpatterns = [
@@ -16,4 +16,6 @@ urlpatterns = [
     path('timeslots-list/', TimeSlotListView.as_view(), name='timeslots-list'),
     path('appointments-list/', AppointmentListView.as_view(), name='appointments-list'),
     path('update-appointment-status/<int:id>', UpdateAppointmentStatusView.as_view(), name='update-appointment-status'),
+    path('self-assessment-list/', SelfAssessmentListView.as_view(), name="self-assessment-list"),
+    path('first-person-assessment-list/', FirstPersonAssessmentListView.as_view(), name='first-person-assessment-list'),
 ]

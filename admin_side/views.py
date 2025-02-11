@@ -237,3 +237,27 @@ class UpdateAppointmentStatusView(APIView):
             return Response({'error': 'Invalid status'}, status=status.HTTP_400_BAD_REQUEST)
         except Order.DoesNotExist:
             return Response({'error': 'Appointment not found'}, status=status.HTTP_404_NOT_FOUND)
+
+
+
+
+
+class SelfAssessmentListView(APIView):
+    def get(self, request):
+        try:
+            self_assessments = SelfAssessment.objects.all().order_by('-date_taken')  # Fetch all assessments, newest first
+            serializer = SelfAssessmentSerializer(self_assessments, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+
+
+class FirstPersonAssessmentListView(APIView):
+    def get(self, request):
+        try:
+            first_person_assessments = FirstPersonClientDetails.objects.all().reverse()  # Fetch all assessments, newest first
+            serializer = FirstPersonClientDetailsSerializer(first_person_assessments, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
