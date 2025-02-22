@@ -10,18 +10,18 @@ class StaticViewSitemap(Sitemap):
 
     def items(self):
         return [
-            'home', 'signup', 'otp-verification', 'login', 'about', 'services',
-            'contact', 'doctor-consulting', 'booking-confirmation', 'success',
-            'create-meet', 'user-profile', 'appointments-history', 'assessment-history',
-            'assessment', 'self-assessment', 'self-assessment-instructions',
-            'first-person-assessment', 'first-person-assessment-instructions',
-            'first-person-assessment-client-details', 'first-person-assessment-user-details',
-            'first-person-assessment-results', 'first-person-assessment-new-user',
-            'terms-conditions', 'privacy-policy', 'careers'
+            '/', '/signup/', '/otp-verification/', '/login/', '/about/', '/services/',
+            '/contact/', '/doctor-consulting/', '/booking-confirmation/', '/success/',
+            '/create-meet/', '/user-profile/', '/appointments-history/', '/assessment-history/',
+            '/assessment/', '/self-assessment/', '/self-assessment-instructions/',
+            '/first-person-assessment/', '/first-person-assessment-instructions/',
+            '/first-person-assessment-client-details/', '/first-person-assessment-user-details/',
+            '/first-person-assessment-results/', '/first-person-assessment-new-user/',
+            '/terms-conditions/', '/privacy-policy/', '/careers/'
         ]
 
     def location(self, item):
-        return reverse(item)  # Converts names to URLs
+        return item   # Converts names to URLs
 
 # 2️⃣ Services Sitemap (Dynamic)
 class ServiceSitemap(Sitemap):
