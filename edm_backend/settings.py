@@ -52,6 +52,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django.contrib.sitemaps',
     'user_side',
     'admin_side',
     'doctor_side',
@@ -84,6 +85,7 @@ CORS_ALLOWED_ORIGINS = [
     'https://master.d35tyda09dui4h.amplifyapp.com',
     "https://www.easedementia.in",
     "https://api.easedementia.in",
+    
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -93,7 +95,7 @@ CORS_ORIGIN_WHITELIST = (
 )
 
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://www.easedementia.in', 'https://easedementia.in']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://www.easedementia.in', 'https://easedementia.in', "https://api.easedementia.in"]
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = False  # Change to True in production
 SESSION_COOKIE_SECURE = False  # Change to True in production
