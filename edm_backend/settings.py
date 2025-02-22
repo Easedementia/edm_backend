@@ -37,7 +37,13 @@ SECRET_KEY = 'django-insecure-5&b(x!d=(@+#!)x(@l&x%))au^3(+rq)j3qap%=y3wnt6u*2+&
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
+ALLOWED_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+    'api.easedementia.in',
+    'www.easedementia.in',
+    'easedementia.in'
+]
 
 
 # Application definition
@@ -58,6 +64,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -65,7 +72,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
 
@@ -84,13 +90,23 @@ CORS_ALLOWED_ORIGINS = [
     'https://master.d35tyda09dui4h.amplifyapp.com',
     "https://www.easedementia.in",
     "https://api.easedementia.in",
+    "http://api.easedementia.in"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_WHITELIST = (
-    'http://localhost:3000',  
-    'https://master.d35tyda09dui4h.amplifyapp.com',
-)
+CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+CORS_ALLOW_HEADERS = [
+    "authorization",
+    "content-type",
+    "accept",
+    "origin",
+    "user-agent",
+    "x-csrftoken",
+    "x-requested-with",
+]
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
+
 
 
 CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://www.easedementia.in', 'https://easedementia.in']
