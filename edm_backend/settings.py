@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'rest_framework_simplejwt',
+    'django.contrib.sitemaps',
     'user_side',
     'admin_side',
     'doctor_side',
@@ -109,7 +110,7 @@ SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
 
 
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://www.easedementia.in', 'https://easedementia.in']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'https://www.easedementia.in', 'https://easedementia.in', "https://api.easedementia.in"]
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = False  # Change to True in production
 SESSION_COOKIE_SECURE = False  # Change to True in production
