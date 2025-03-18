@@ -1,5 +1,5 @@
 from django.db import models
-from .validators import validate_svg
+from .validators import validate_image_format
 from django.core.exceptions import ValidationError
 
 
@@ -9,7 +9,7 @@ from django.core.exceptions import ValidationError
 class Service(models.Model):
     title = models.CharField(max_length=255)
     description = models.TextField()
-    image = models.FileField(upload_to='services/', validators=[validate_svg])
+    image = models.FileField(upload_to='services/', validators=[validate_image_format])
 
     def __str__(self):
         return self.title
